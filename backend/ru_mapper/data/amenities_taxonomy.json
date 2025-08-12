@@ -1,0 +1,122 @@
+{
+  "Core": [
+    "Wifi",
+    "Ethernet",
+    "Air conditioning",
+    "Heating",
+    "Washer",
+    "Dryer",
+    "Iron",
+    "TV",
+    "Cable TV",
+    "Satellite TV",
+    "Streaming services",
+    "Workspace"
+  ],
+  "Kitchen": [
+    "Kitchen",
+    "Fridge",
+    "Freezer",
+    "Oven",
+    "Stove",
+    "Microwave",
+    "Dishwasher",
+    "Coffee machine",
+    "Kettle",
+    "Toaster",
+    "Cookware",
+    "Tableware",
+    "Basic cooking essentials",
+    "Wine glasses",
+    "Blender",
+    "Rice cooker",
+    "Barbecue utensils"
+  ],
+  "Bath": [
+    "Shower",
+    "Bathtub",
+    "Hairdryer",
+    "Towels",
+    "Toiletries",
+    "Bidet",
+    "Hot water"
+  ],
+  "Sleep": [
+    "Linens",
+    "Extra pillows and blankets",
+    "Blackout curtains",
+    "Crib",
+    "High chair",
+    "Mattress topper"
+  ],
+  "Comfort & Safety": [
+    "Elevator",
+    "Step-free access",
+    "Wheelchair accessible",
+    "Smoke detector",
+    "CO detector",
+    "Fire extinguisher",
+    "First aid kit",
+    "Safe",
+    "Security cameras on property"
+  ],
+  "Climate & Utilities": [
+    "Ceiling fan",
+    "Portable fans",
+    "Heating",
+    "Water heater",
+    "Backup generator",
+    "UPS"
+  ],
+  "Outdoor": [
+    "Balcony",
+    "Terrace",
+    "Garden",
+    "BBQ grill",
+    "Private pool",
+    "Shared pool",
+    "Heated pool",
+    "Hot tub",
+    "Beachfront",
+    "Sea view",
+    "City view",
+    "Outdoor furniture",
+    "Sun loungers",
+    "Outdoor dining area"
+  ],
+  "Parking & Transport": [
+    "Free parking",
+    "Paid parking",
+    "Valet",
+    "EV charger",
+    "Bicycle storage"
+  ],
+  "Fitness & Leisure": [
+    "Gym",
+    "Sauna",
+    "Steam room",
+    "Tennis court",
+    "Kids’ play area",
+    "Game console",
+    "Table tennis",
+    "Billiards",
+    "Board games"
+  ],
+  "Business": [
+    "Meeting room",
+    "Printer",
+    "Scanner",
+    "Fast internet (>50 Mbps)"
+  ],
+  "Regional (GCC)": [
+    "Prayer mat",
+    "Qibla indicator"
+  ],
+  "Rules": [
+    "No parties",
+    "No pets",
+    "Pets allowed",
+    "Smoking allowed",
+    "Smoking not allowed"
+  ]
+}

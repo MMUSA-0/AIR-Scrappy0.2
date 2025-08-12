@@ -1,0 +1,10 @@
+[project]
+name = "air-scrappy-backend"
+version = "0.1.0"
+description = "Airbnb -> Rentals United scraper backend"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]

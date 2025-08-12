@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+playwright
+beautifulsoup4
+pydantic>=2
+rapidfuzz
+slowapi
+httpx
+jinja2
+python-json-logger
+pytest
+prometheus-fastapi-instrumentator

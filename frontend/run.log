@@ -1,0 +1,9 @@
+
+> air-scrappy-frontend@0.1.0 dev
+> vite --host
+
+
+  VITE v5.4.19  ready in 292 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.100.12:5173/
