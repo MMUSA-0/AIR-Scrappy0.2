@@ -49,9 +49,9 @@ Frontend will be served on http://localhost:5173 and proxy API requests to the b
 
 ```mermaid
 flowchart LR
-  A[Frontend (Vite + React)] --> B[Nginx (container)]
+  A[Frontend] --> B[Nginx]
   B --> C[FastAPI Backend]
-  C --> D[Scraper (Playwright + BS4)]
+  C --> D[Scraper]
   C --> E[Prometheus Exporter]
   E --> F[Prometheus]
   F --> G[Grafana]
