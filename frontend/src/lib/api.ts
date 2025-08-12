@@ -1,8 +1,11 @@
-let BASE: string = (import.meta.env.VITE_API_BASE as string) || '/api'
+let BASE: string = ((import.meta.env.VITE_API_BASE as string) || '').replace(/\/$/, '')
+const API_PREFIX = '/api'
 
 export function setApiBase(base: string) {
   if (!base) return
-  BASE = base.replace(/\/$/, '')
+  // Treat '/api' as empty since endpoints already include the '/api' prefix
+  const cleaned = base.trim()
+  BASE = cleaned === '/api' || cleaned === '/api/' ? '' : cleaned.replace(/\/$/, '')
 }
 
 export function getApiBase() {
@@ -12,7 +15,7 @@ export function getApiBase() {
 type HeadersInit = Record<string, string>
 
 export async function extractRaw(url: string, headers: HeadersInit = {}) {
-  const res = await fetch(`${BASE}/api/extract`, {
+  const res = await fetch(`${BASE}${API_PREFIX}/extract`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify({ url }),
@@ -22,7 +25,7 @@ export async function extractRaw(url: string, headers: HeadersInit = {}) {
 }
 
 export async function mapToRU(url: string, headers: HeadersInit = {}) {
-  const res = await fetch(`${BASE}/api/map/rentals-united`, {
+  const res = await fetch(`${BASE}${API_PREFIX}/map/rentals-united`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify({ url }),
@@ -44,13 +47,13 @@ export function normalizeUrl(input: string): string {
 }
 
 export async function robotsCheck(url: string) {
-  const res = await fetch(`${BASE}/robots-check?url=${encodeURIComponent(url)}`, { method: 'GET' })
+  const res = await fetch(`${BASE}${API_PREFIX}/robots-check?url=${encodeURIComponent(url)}`, { method: 'GET' })
   if (!res.ok) throw Object.assign(new Error('request failed'), { status: res.status })
   return res.json()
 }
 
 export async function health() {
-  const res = await fetch(`${BASE}/healthz`)
+  const res = await fetch(`${BASE}${API_PREFIX}/healthz`)
   if (!res.ok) throw Object.assign(new Error('request failed'), { status: res.status })
   return res.json()
 }
