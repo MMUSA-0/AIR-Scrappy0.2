@@ -48,10 +48,10 @@ Frontend will be served on http://localhost:5173 and proxy API requests to the b
 ## Architecture
 
 ```mermaid
-graph LR
-  A[Frontend (Vite/React)] -->|/api| B[Nginx (container)]
+flowchart LR
+  A[Frontend (Vite + React)] --> B[Nginx (container)]
   B --> C[FastAPI Backend]
-  C --> D[Scraper (Playwright/BS4)]
+  C --> D[Scraper (Playwright + BS4)]
   C --> E[Prometheus Exporter]
   E --> F[Prometheus]
   F --> G[Grafana]
@@ -149,8 +149,3 @@ docker build -t air-scrappy-frontend ./frontend
 - Grafana dashboards for latency/error/throughput
 - Frontend UX improvements (copy/download JSON, dark mode)
 
-## License
-
-This project is licensed under the terms of the license in `LICENSE`.
-
-Try: `https://www.airbnb.com/rooms/780210484211628646`
