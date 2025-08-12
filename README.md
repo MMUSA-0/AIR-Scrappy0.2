@@ -5,6 +5,15 @@ Production‑grade scraper skeleton:
 - React + Vite single‑page admin UI for testing and inspecting outputs
 - Docker Compose with Prometheus + Grafana for basic monitoring
 
+## Key features
+
+- Robust extraction from `__NEXT_DATA__` with safe HTML fallbacks
+- Optional Playwright rendering, image and amenities enrichment
+- Amenity normalization with synonyms and fuzzy matching
+- Built‑in rate limiting, CORS, health, and Prometheus metrics
+- Lightweight React admin to validate and inspect results
+- Dockerized dev/prod flows; CI for tests and frontend build
+
 ## Quickstart (local dev)
 
 Backend (Python 3.11+):
@@ -36,21 +45,37 @@ docker compose up --build
 
 Frontend will be served on http://localhost:5173 and proxy API requests to the backend.
 
+## Architecture
+
+```mermaid
+graph LR
+  A[Frontend (Vite/React)] -->|/api| B[Nginx (container)]
+  B --> C[FastAPI Backend]
+  C --> D[Scraper (Playwright/BS4)]
+  C --> E[Prometheus Exporter]
+  E --> F[Prometheus]
+  F --> G[Grafana]
+```
+
 ## Environment variables
 
-Backend (set via shell or an `.env` file in repo root referenced by `compose.yaml`):
+Backend (set via shell or `.env` referenced by `compose.yaml`):
 
-- `API_KEY` (optional): Require clients to send `X-API-Key: <value>` header
-- `ALLOWED_ORIGINS` (CSV): CORS allowlist. Default: `http://localhost:5173,http://localhost:5174,http://localhost:5175`
-- `RATE_LIMIT` (SlowAPI format): Default `60/minute`
-- `PLAYWRIGHT_TIMEOUT` (int seconds): Navigation/render timeout. Default `15`
-- `MAX_IMAGES` (int): Upper bound for image enrichment. Default `25`
-- `USER_AGENT_POOL` (JSON array, optional): Custom UA rotation, e.g. `["Mozilla/5.0 ...", "Mozilla/5.0 ..."]`
-- `HTTP_PROXY` / `HTTPS_PROXY` (optional): Proxy settings passed to Playwright
+| Name | Default | Description |
+|------|---------|-------------|
+| `API_KEY` | empty | If set, require `X-API-Key` header on protected endpoints |
+| `ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:5174,http://localhost:5175` | CORS allowlist |
+| `RATE_LIMIT` | `60/minute` | Global rate limit (SlowAPI format) |
+| `PLAYWRIGHT_TIMEOUT` | `15` | Seconds for navigation/render timeout |
+| `MAX_IMAGES` | `25` | Max images to enrich via Playwright |
+| `USER_AGENT_POOL` | empty | JSON array of UAs to rotate |
+| `HTTP_PROXY`/`HTTPS_PROXY` | empty | Proxy to use for Playwright |
 
 Frontend:
 
-- `VITE_API_BASE`: Base URL for API. Defaults to `/api` (works with dev proxy and Nginx in Docker)
+| Name | Default | Description |
+|------|---------|-------------|
+| `VITE_API_BASE` | `/api` | Base URL for API requests |
 
 > Tip: If you don’t keep an `.env` in the repo, export these in your shell or your CI variables.
 
@@ -63,6 +88,16 @@ Frontend:
 - `POST /api/map/rentals-united` with body `{ "url": "..." }` → Normalized Rentals United shaped output
 
 Send `X-API-Key` header when `API_KEY` is set.
+
+Example:
+
+```bash
+curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"url":"https://www.airbnb.com/rooms/780210484211628646"}' \
+  http://localhost:8000/api/extract | jq .
+```
 
 ## Monitoring
 
@@ -95,5 +130,27 @@ docker build -t air-scrappy-frontend ./frontend
 - Metrics are exposed for minimal observability; extend as needed
 
 ## Sample URL
+## Troubleshooting
+
+- macOS “externally-managed-environment” error: create a venv and use `pip --break-system-packages` if needed.
+  ```bash
+  cd backend && python3 -m venv .venv && source .venv/bin/activate
+  pip install -r requirements.txt --break-system-packages
+  ```
+- Playwright missing browsers: `python -m playwright install --with-deps chromium`
+- Ports already in use: change ports in `compose.yaml` or stop conflicting services.
+- API 401: set `API_KEY` and pass `X-API-Key` header from the UI or curl.
+
+## Roadmap
+
+- Pre-commit (ruff/black/isort/mypy) + CI lint step
+- Stronger extraction heuristics and additional fixtures
+- Proxy rotation and stealth strategies
+- Grafana dashboards for latency/error/throughput
+- Frontend UX improvements (copy/download JSON, dark mode)
+
+## License
+
+This project is licensed under the terms of the license in `LICENSE`.
 
 Try: `https://www.airbnb.com/rooms/780210484211628646`
