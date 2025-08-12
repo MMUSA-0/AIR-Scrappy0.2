@@ -14,6 +14,17 @@ Production‑grade scraper skeleton:
 - Lightweight React admin to validate and inspect results
 - Dockerized dev/prod flows; CI for tests and frontend build
 
+### Frontend features
+
+- URL input with enter-to-run, plus one-click sample URL
+- Toggle between actions: Extract (raw) vs Map (normalized to Rentals United)
+- API base URL override and optional `X-API-Key` header toggle
+- Robots.txt quick preview for the entered URL’s host
+- Result Summary, Photo grid, Amenities list (raw and normalized)
+- JSON output viewer with tabs
+- Run history with per-run timing and status, and summary statistics
+- Top progress indicator and side navigation for sections
+
 ## Quickstart (local dev)
 
 Backend (Python 3.11+):
@@ -99,6 +110,32 @@ curl -s -X POST \
   http://localhost:8000/api/extract | jq .
 ```
 
+## What data is extracted
+
+The backend returns an `ExtractedListing` (raw) or `RUListing` (normalized). Core fields include:
+
+- Title, description
+- Address: full, street, city, state, postal_code, country, lat, lng
+- Photos: URL, width, height, caption (deduplicated, filtered, max 25)
+- Amenities: `amenities_raw` (as found) and `amenities_normalized` (canonical)
+- Capacity: bedrooms, beds, bathrooms, max_guests
+- Types: `property_type_raw`, `room_type_raw`
+- Rating, currency, base_price
+- Host: name, superhost, response_rate, response_time
+- Source: `airbnb`, canonical_url, fetched_at
+
+Extraction strategy:
+- Prefer `__NEXT_DATA__` JSON when present for high-fidelity fields
+- Fallback to DOM parsing when JSON is absent
+- Opportunistic Playwright use to load dynamic pages
+- Image enrichment: capture network image requests and DOM `img/srcset`, scroll to trigger lazy loads
+
+Amenity detection and normalization:
+- Synonym pre-map via `ru_mapper/data/amenities_synonyms.json`
+- Fuzzy match remaining items to canonical taxonomy (`amenities_taxonomy.json`) using RapidFuzz
+- Conservative threshold (token_set_ratio ≥ 88) to avoid false positives
+- Optional Playwright flow opens the amenities modal and scrapes visible items while filtering obvious noise
+
 ## Monitoring
 
 - Prometheus runs at http://localhost:9090 and scrapes backend `/metrics`
@@ -111,6 +148,31 @@ cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pytest -q
+```
+
+### Frontend testing
+
+Manual QA (development server):
+
+```bash
+cd frontend
+npm install
+npm run dev
+# open http://localhost:5173
+# 1) Paste an Airbnb listing URL
+# 2) Choose Extract (raw) or Map (normalized)
+# 3) Optionally set API base and X-API-Key in the Controls panel
+# 4) Verify Robots preview, Summary, Photos, Amenities, and JSON tabs populate
+```
+
+Production build sanity check:
+
+```bash
+cd frontend
+npm ci
+npm run build
+npm run preview -- --host
+# open the served URL, repeat steps above
 ```
 
 ## Build production images (optional)
