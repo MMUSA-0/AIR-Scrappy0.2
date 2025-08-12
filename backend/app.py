@@ -8,9 +8,10 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
-from slowapi import Limiter
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 from ru_mapper.mapping import map_to_ru
 from ru_mapper.schema import ExtractedListing, RUListing, Photo
@@ -36,9 +37,9 @@ APP.add_middleware(
 )
 
 # Rate limiting
-limiter = Limiter(key_func=lambda request: request.client.host)
+limiter = Limiter(key_func=get_remote_address)
 APP.state.limiter = limiter
-APP.add_exception_handler(RateLimitExceeded, lambda request, exc: HTTPException(status_code=429, detail="Too Many Requests"))
+APP.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 APP.add_middleware(SlowAPIMiddleware)
 
 # Metrics
@@ -56,8 +57,25 @@ def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
 
 @APP.get("/healthz")
 async def healthz() -> Dict[str, Any]:
-    # Basic health; Playwright/browser health could be added here later
-    return {"status": "ok", "browser": False, "contexts": 0}
+    # Report Playwright/browser status if available
+    browser_ok = False
+    contexts = 0
+    try:
+        from scraper.browser import BrowserManager  # type: ignore
+
+        mgr = BrowserManager.instance()
+        browser = getattr(mgr, "_browser", None)
+        if browser is not None:
+            browser_ok = True
+            try:
+                contexts = len(browser.contexts)
+            except Exception:
+                contexts = 0
+    except Exception:
+        # Playwright not installed or browser not started
+        browser_ok = False
+        contexts = 0
+    return {"status": "ok", "browser": browser_ok, "contexts": contexts}
 
 
 # Alias under /api for frontend proxy convenience
