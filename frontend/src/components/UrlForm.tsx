@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { getApiBase, setApiBase } from '../lib/api'
+import { getApiBase, setApiBase, normalizeUrl } from '../lib/api'
 
 type Props = {
   url: string
@@ -19,6 +19,8 @@ export default function UrlForm({ url, setUrl, apiKey, setApiKey, sendKey, setSe
   const [apiBase, setApiBaseLocal] = useState<string>(getApiBase())
 
   const run = () => {
+    // Normalize URL before sending
+    setUrl(normalizeUrl(url))
     if (action === 'extract') onExtract()
     else onMap()
   }
@@ -77,9 +79,14 @@ export default function UrlForm({ url, setUrl, apiKey, setApiKey, sendKey, setSe
           >{loading ? 'Working…' : action === 'extract' ? 'Extract (raw)' : 'Map (normalized)'}</button>
           <button
             type="button"
-            onClick={() => setUrl('https://www.airbnb.com/rooms/780210484211628646')}
+            onClick={() => setUrl('https://www.airbnb.com/rooms/1211031564000709008')}
             className="text-xs text-gray-600 hover:underline text-left"
           >Try sample URL</button>
+          <button
+            type="button"
+            onClick={() => setUrl('https://airbnb.com/h/irtahal-apartment57')}
+            className="text-xs text-gray-600 hover:underline text-left"
+          >Try sample URL 2</button>
         </div>
       </div>
     </div>

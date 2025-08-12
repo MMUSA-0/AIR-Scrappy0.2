@@ -31,6 +31,18 @@ export async function mapToRU(url: string, headers: HeadersInit = {}) {
   return res.json()
 }
 
+export function normalizeUrl(input: string): string {
+  if (!input) return ''
+  let s = String(input).trim()
+  if (s.startsWith('@')) s = s.replace(/^@+/, '').trim()
+  if ((s.startsWith('<') && s.endsWith('>')) || (s.startsWith('"') && s.endsWith('"'))) {
+    s = s.slice(1, -1).trim()
+  }
+  while (s && ")].,".includes(s.slice(-1))) s = s.slice(0, -1)
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s
+  return s
+}
+
 export async function robotsCheck(url: string) {
   const res = await fetch(`${BASE}/robots-check?url=${encodeURIComponent(url)}`, { method: 'GET' })
   if (!res.ok) throw Object.assign(new Error('request failed'), { status: res.status })

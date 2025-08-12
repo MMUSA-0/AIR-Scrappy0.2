@@ -93,3 +93,71 @@ def is_airbnb_listing_url(url: str) -> bool:
         return False
     u = url.lower()
     return "/rooms/" in u or "/p/" in u  # PDP canonical paths
+
+
+def normalize_airbnb_url(input_url: str) -> str:
+    """Return a sanitized URL string that the backend can safely fetch.
+
+    This is intentionally conservative and does not attempt network lookups.
+    It handles:
+      - leading/trailing whitespace and stray leading '@'
+      - missing scheme (assumes https)
+      - surrounding angle brackets or quotes
+      - common markdown copy artifacts (trailing ')' or '.')
+    """
+    if input_url is None:
+        return ""
+    s = str(input_url).strip()
+    # Drop leading '@' often used in chat mentions
+    if s.startswith("@"):
+        s = s.lstrip("@").strip()
+    # Remove surrounding angle brackets or quotes
+    if (s.startswith("<") and s.endswith(">")) or (s.startswith("\"") and s.endswith("\"")):
+        s = s[1:-1].strip()
+    # Trim trailing punctuation that is not part of URL
+    while s and s[-1] in ")].,":
+        s = s[:-1]
+    # Ensure scheme
+    if not s.startswith("http://") and not s.startswith("https://"):
+        s = "https://" + s
+    return s
+
+
+async def canonicalize_airbnb_url(url: str, timeout_s: int = 8) -> str:
+    """Attempt a lightweight network canonicalization.
+
+    - Follows redirects using a plain HTTP client
+    - If HTML is returned and contains a canonical link or a rooms path,
+      prefer that as the canonical target
+    - Never raises; returns the original URL on failure
+    """
+    try:
+        import re
+        import httpx
+
+        async with httpx.AsyncClient(follow_redirects=True, timeout=timeout_s) as client:
+            resp = await client.get(url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            })
+            final_url = str(resp.url)
+            # If we landed on a rooms URL already, return it
+            if "/rooms/" in final_url:
+                return final_url
+            # Try to parse canonical
+            text = resp.text or ""
+            m = re.search(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']', text, re.I)
+            if m:
+                href = m.group(1)
+                if "/rooms/" in href or "/h/" in href:
+                    return href if href.startswith("http") else ("https://www.airbnb.com" + href)
+            # Heuristic: look for a rooms link
+            m2 = re.search(r'https?://[^"\s]+/rooms/\d+', text)
+            if m2:
+                return m2.group(0)
+            m3 = re.search(r'(/rooms/\d+)', text)
+            if m3:
+                return "https://www.airbnb.com" + m3.group(1)
+            return final_url or url
+    except Exception:
+        return url

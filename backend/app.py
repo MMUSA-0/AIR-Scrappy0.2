@@ -17,7 +17,11 @@ from ru_mapper.mapping import map_to_ru
 from ru_mapper.schema import ExtractedListing, RUListing, Photo
 from scraper.extractor import extract_from_html
 from scraper.enrich import collect_images, collect_amenities
-from scraper.utils import find_first_listing_like
+from scraper.utils import (
+    find_first_listing_like,
+    normalize_airbnb_url,
+    canonicalize_airbnb_url,
+)
 
 APP = FastAPI(title="AIR-scrappy API", version="0.1.0")
 
@@ -155,7 +159,12 @@ async def fetch_html_with_httpx(url: str) -> str:
 @limiter.limit(RATE_LIMIT)
 async def api_extract(payload: UrlInput, request: Request, _: None = Depends(require_api_key)) -> ExtractedListing:
     start = time.time()
-    url = payload.url
+    url = normalize_airbnb_url(payload.url)
+    if "/rooms/" not in url:
+        try:
+            url = await canonicalize_airbnb_url(url)
+        except Exception:
+            pass
 
     html = await fetch_html_with_playwright(url)
     if not html:
@@ -188,6 +197,12 @@ async def api_extract(payload: UrlInput, request: Request, _: None = Depends(req
 async def api_extract_get(url: str, request: Request, _: None = Depends(require_api_key)) -> ExtractedListing:
     # Convenience GET endpoint for manual testing
     start = time.time()
+    url = normalize_airbnb_url(url)
+    if "/rooms/" not in url:
+        try:
+            url = await canonicalize_airbnb_url(url)
+        except Exception:
+            pass
     html = await fetch_html_with_playwright(url)
     if not html:
         html = await fetch_html_with_httpx(url)
@@ -199,11 +214,17 @@ async def api_extract_get(url: str, request: Request, _: None = Depends(require_
 @APP.post("/api/map/rentals-united")
 @limiter.limit(RATE_LIMIT)
 async def api_map_ru(payload: UrlInput, request: Request, _: None = Depends(require_api_key)) -> RUListing:
-    html = await fetch_html_with_playwright(payload.url)
+    url = normalize_airbnb_url(payload.url)
+    if "/rooms/" not in url:
+        try:
+            url = await canonicalize_airbnb_url(url)
+        except Exception:
+            pass
+    html = await fetch_html_with_playwright(url)
     if not html:
         html = await fetch_html_with_httpx(payload.url)
 
-    listing = extract_from_html(html, url=payload.url)
+    listing = extract_from_html(html, url=url)
     # Enrichment similar to /api/extract
     try:
         if len(listing.photos) < 5:
@@ -225,6 +246,12 @@ async def api_map_ru(payload: UrlInput, request: Request, _: None = Depends(requ
 @APP.get("/api/map/rentals-united")
 @limiter.limit(RATE_LIMIT)
 async def api_map_ru_get(url: str, request: Request, _: None = Depends(require_api_key)) -> RUListing:
+    url = normalize_airbnb_url(url)
+    if "/rooms/" not in url:
+        try:
+            url = await canonicalize_airbnb_url(url)
+        except Exception:
+            pass
     html = await fetch_html_with_playwright(url)
     if not html:
         html = await fetch_html_with_httpx(url)

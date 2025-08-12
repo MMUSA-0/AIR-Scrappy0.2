@@ -106,7 +106,13 @@ Example:
 curl -s -X POST \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
-  -d '{"url":"https://www.airbnb.com/rooms/780210484211628646"}' \
+  -d '{"url":"https://www.airbnb.com/rooms/1211031564000709008"}' \
+  http://localhost:8000/api/extract | jq .
+
+# Alternate style URL also works
+curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://airbnb.com/h/irtahal-apartment57"}' \
   http://localhost:8000/api/extract | jq .
 ```
 
