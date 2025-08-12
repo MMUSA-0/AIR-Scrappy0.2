@@ -1,4 +1,4 @@
-# AIR-scrappy (Airbnb → Rentals United)
+# AIR-scrappy
 
 Production‑grade scraper skeleton:
 - FastAPI backend with Playwright‑ready rendering, robust HTML/JSON extraction, rate limiting, CORS, and Prometheus metrics
